@@ -5,7 +5,10 @@ import os
 import time
 import requests
 import math
-import os
+from collections import defaultdict
+import decimal
+import operator
+    
 
 
 def lambda_handler(event, context):
@@ -33,10 +36,6 @@ def get_price(token):
         d1 = ctx.create_decimal(repr(f))
         return format(d1, 'f')
 
-    from collections import defaultdict
-    import decimal
-    import operator
-    
     ctx = decimal.Context()
     ctx.prec = 6
     BASE_URL = 'https://api.cryptowat.ch'
@@ -79,10 +78,10 @@ def get_direction(pair, new_price):
         item['price'] = new_price
         table.put_item(Item=item)
         if old_price > new_price:
-            rounded_percent = round_sigfigs((1-(new_price/old_price))*100, 3)
+            rounded_percent = round_sigfigs((1-(new_price/old_price))*100, 4)
             return f'(n) {new_price-old_price} -{rounded_percent}%' 
         elif old_price < new_price:
-            rounded_percent = round_sigfigs((new_price/old_price)*100, 3)
+            rounded_percent = round_sigfigs((1-(new_price/old_price))*100, 3)
             return f'(y) +{new_price-old_price} +{rounded_percent}%'
         elif old_price == new_price:
             return '='
@@ -99,5 +98,3 @@ def round_sigfigs(num, sig_figs):
         return round(num, -int(math.floor(math.log10(abs(num))) - (sig_figs - 1)))
     else:
         return 0  # Can't take the log of 0
-
-
