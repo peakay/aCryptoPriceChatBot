@@ -20,11 +20,12 @@ def lambda_handler(event, context):
     recipient = data['from']
     service = data['serviceUrl']
     sender = data['conversation']['id']
+    data['text'] = data['text'].replace(u'\xa0', u' ')
     coin = data['text'].split(' ')[1]
     price = get_price(coin.lower())
     print_me = f'Top 5 markets sorted by volume for {coin.upper()}\n'
-    for price_pair in price:
-        print_me += f'{price_pair["pair"].upper()}: {price_pair["price"]} Direction: {price_pair["direction"]}\n'
+    for price_info in price:
+        print_me += str(price_info)
     bot.send_message(bot_id, bot_name, recipient, service, sender, print_me)
 
 def get_price(token):
@@ -60,10 +61,11 @@ def get_price(token):
         totals[pair] += price_info['price']['last']*price_info['volumeQuote']
     
     sorted_x = sorted(volumes_base.items(), key=operator.itemgetter(1), reverse=True)[:5]
-    sorted_by_volume = [{'pair': pair, 
-                        'price': float_to_str(round_sigfigs(totals[pair]/volumes[pair], 6)),
-                        'direction': get_direction(pair, decimal.Decimal(str(round_sigfigs(totals[pair]/volumes[pair], 6))))
-                        } for pair, volume in sorted_x]
+
+    sorted_by_volume = [PriceInfo(pair=pair,
+                                  price=float_to_str(round_sigfigs(totals[pair]/volumes[pair], 6)),
+                                  direction=get_direction(pair, decimal.Decimal(str(round_sigfigs(totals[pair]/volumes[pair], 6)))))
+                        for pair, volume in sorted_x]
     return sorted_by_volume
 
 def get_direction(pair, new_price):
@@ -98,3 +100,12 @@ def round_sigfigs(num, sig_figs):
         return round(num, -int(math.floor(math.log10(abs(num))) - (sig_figs - 1)))
     else:
         return 0  # Can't take the log of 0
+
+
+class PriceInfo:
+    def __init__(self, pair, price, direction):
+        self.pair = pair
+        self.price = price
+        self.direction = direction
+    def __str__(self):
+        return f'{self.pair.upper()}: {self.price} Direction: {self.direction}\n'
