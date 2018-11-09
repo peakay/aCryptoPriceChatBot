@@ -81,7 +81,7 @@ def get_direction(pair, new_price):
             rounded_percent = round_sigfigs((1-(new_price/old_price))*100, 3)
             return f'(n) {new_price-old_price} -{rounded_percent}%' 
         elif old_price < new_price:
-            rounded_percent = round_sigfigs((1-(new_price/old_price))*100, 3)
+            rounded_percent = round_sigfigs(((new_price/old_price)-1)*100, 3)
             return f'(y) +{new_price-old_price} +{rounded_percent}%'
         elif old_price == new_price:
             return '='
